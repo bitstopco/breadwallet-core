@@ -1452,19 +1452,23 @@ static void _dummyThreadCleanup(void *info)
 }
 
 // returns a newly allocated BRPeerManager struct that must be freed by calling BRPeerManagerFree()
-BRPeerManager *BRPeerManagerNew(const BRChainParams *params, BRWallet *wallet, uint32_t earliestKeyTime,
-                                BRMerkleBlock *blocks[], size_t blocksCount, const BRPeer peers[], size_t peersCount)
+// BRChainParams was removed from being a parameter since we only need Bitcoin and Bitcoin Testnet
+// chain params. This data is taken statically from BRChainParams.h.
+BRPeerManager *BRPeerManagerNew(BRWallet *wallet, uint32_t earliestKeyTime, BRMerkleBlock *blocks[],
+                                size_t blocksCount, const BRPeer peers[], size_t peersCount)
 {
     BRPeerManager *manager = calloc(1, sizeof(*manager));
     BRMerkleBlock orphan, *block = NULL;
     
     assert(manager != NULL);
-    assert(params != NULL);
-    assert(params->standardPort != 0);
     assert(wallet != NULL);
     assert(blocks != NULL || blocksCount == 0);
     assert(peers != NULL || peersCount == 0);
-    manager->params = params;
+#if BITCOIN_TESTNET
+    manager->params = &BRTestNetParams;
+#else
+    manager->params = &BRMainNetParams;
+#endif
     manager->wallet = wallet;
     manager->earliestKeyTime = earliestKeyTime;
     manager->averageTxPerBlock = 1400;
@@ -1558,6 +1562,18 @@ void BRPeerManagerSetFixedPeer(BRPeerManager *manager, UInt128 address, uint16_t
     manager->fixedPeer = ((BRPeer) { address, port, 0, 0, 0 });
     array_clear(manager->peers);
     pthread_mutex_unlock(&manager->lock);
+}
+
+// true if currently connected to at least one peer
+int BRPeerManagerIsConnected(BRPeerManager *manager)
+{
+    int isConnected;
+    
+    assert(manager != NULL);
+    pthread_mutex_lock(&manager->lock);
+    isConnected = manager->isConnected;
+    pthread_mutex_unlock(&manager->lock);
+    return isConnected;
 }
 
 // current connect status
