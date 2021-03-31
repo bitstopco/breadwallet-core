@@ -57,8 +57,8 @@ static void txDeleted(void *info, UInt256 txHash, int notifyUser, int recommendR
 static jclass addressClass;
 static jmethodID addressConstructor;
 
-static jclass transactionClass;
-static jmethodID transactionConstructor;
+static jclass transactionClassPaymentProtocol;
+static jmethodID transactionConstructorPaymentProtocol;
 
 
 /*
@@ -223,13 +223,13 @@ Java_co_hodlwallet_core_BRCoreWallet_jniGetTransactions
     BRTransaction **transactions = (BRTransaction **) calloc (transactionCount, sizeof (BRTransaction *));
     transactionCount = BRWalletTransactions (wallet, transactions, transactionCount);
 
-    jobjectArray transactionArray = (*env)->NewObjectArray (env, transactionCount, transactionClass, 0);
+    jobjectArray transactionArray = (*env)->NewObjectArray (env, transactionCount, transactionClassPaymentProtocol, 0);
 
     // TODO: Decide if copy is okay; if not, be sure to mark 'isRegistered = true'
     //   We should not copy; but we need to deal with wallet-initiated 'free'
     for (int index = 0; index < transactionCount; index++) {
         jobject transactionObject =
-            (*env)->NewObject (env, transactionClass, transactionConstructor,
+            (*env)->NewObject (env, transactionClassPaymentProtocol, transactionConstructorPaymentProtocol,
                                (jlong) JNI_COPY_TRANSACTION(transactions[index]));
         assert (!(*env)->IsSameObject (env, transactionObject, NULL));
 
@@ -256,11 +256,11 @@ Java_co_hodlwallet_core_BRCoreWallet_getTransactionsConfirmedBefore
     BRTransaction **transactions = (BRTransaction **) calloc (transactionCount, sizeof (BRTransaction *));
     BRWalletTxUnconfirmedBefore (wallet, transactions, transactionCount, blockHeight);
 
-    jobjectArray transactionArray = (*env)->NewObjectArray (env, transactionCount, transactionClass, 0);
+    jobjectArray transactionArray = (*env)->NewObjectArray (env, transactionCount, transactionClassPaymentProtocol, 0);
 
     for (int index = 0; index < transactionCount; index++) {
         jobject transactionObject =
-            (*env)->NewObject (env, transactionClass, transactionConstructor,
+            (*env)->NewObject (env, transactionClassPaymentProtocol, transactionConstructorPaymentProtocol,
                                (jlong) JNI_COPY_TRANSACTION(transactions[index]));
 
         (*env)->SetObjectArrayElement (env, transactionArray, index, transactionObject);
@@ -371,7 +371,7 @@ Java_co_hodlwallet_core_BRCoreWallet_createTransaction
 
     return NULL == transaction
            ? NULL
-           : (*env)->NewObject(env, transactionClass, transactionConstructor, (jlong) transaction);
+           : (*env)->NewObject(env, transactionClassPaymentProtocol, transactionConstructorPaymentProtocol, (jlong) transaction);
 }
 
 /*
@@ -399,7 +399,7 @@ JNIEXPORT jobject JNICALL Java_co_hodlwallet_core_BRCoreWallet_createTransaction
 
     return NULL == transaction
            ? NULL
-           : (*env)->NewObject(env, transactionClass, transactionConstructor, (jlong) transaction);
+           : (*env)->NewObject(env, transactionClassPaymentProtocol, transactionConstructorPaymentProtocol, (jlong) transaction);
 }
 
 
@@ -515,7 +515,7 @@ Java_co_hodlwallet_core_BRCoreWallet_jniTransactionForHash
 
     uint8_t *hashData = (uint8_t *) (*env)->GetByteArrayElements(env, hashByteArray, 0);
 
-    return (*env)->NewObject (env, transactionClass, transactionConstructor,
+    return (*env)->NewObject (env, transactionClassPaymentProtocol, transactionConstructorPaymentProtocol,
                               (jlong) JNI_COPY_TRANSACTION(BRWalletTransactionForHash(wallet, UInt256Get(hashData))));
 }
 
@@ -688,12 +688,12 @@ JNIEXPORT void JNICALL Java_co_hodlwallet_core_BRCoreWallet_initializeNative
     addressConstructor = (*env)->GetMethodID(env, addressClass, "<init>", "(J)V");
     assert (NULL != addressConstructor);
 
-    transactionClass = (*env)->FindClass (env, "co/hodlwallet/core/BRCoreTransaction");
-    assert (NULL != transactionClass);
-    transactionClass = (*env)->NewGlobalRef (env, transactionClass);
+    transactionClassPaymentProtocol = (*env)->FindClass (env, "co/hodlwallet/core/BRCoreTransaction");
+    assert (NULL != transactionClassPaymentProtocol);
+    transactionClassPaymentProtocol = (*env)->NewGlobalRef (env, transactionClassPaymentProtocol);
 
-    transactionConstructor = (*env)->GetMethodID(env, transactionClass, "<init>", "(J)V");
-    assert (NULL != transactionConstructor);
+    transactionConstructorPaymentProtocol = (*env)->GetMethodID(env, transactionClassPaymentProtocol, "<init>", "(J)V");
+    assert (NULL != transactionConstructorPaymentProtocol);
 }
 
 //
@@ -749,8 +749,8 @@ txAdded(void *info, BRTransaction *tx) {
     assert (NULL != listenerMethod);
 
     // Create the BRCoreTransaction
-    jobject transaction = (*env)->NewObject (env, transactionClass, transactionConstructor,
-                          (jlong) JNI_COPY_TRANSACTION(tx));
+    jobject transaction = (*env)->NewObject (env, transactionClassPaymentProtocol, transactionConstructorPaymentProtocol,
+                                             (jlong) JNI_COPY_TRANSACTION(tx));
 
     // Invoke the callback with the provided transaction
     (*env)->CallVoidMethod(env, listener,

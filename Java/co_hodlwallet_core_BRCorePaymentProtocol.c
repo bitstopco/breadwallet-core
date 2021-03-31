@@ -29,39 +29,39 @@
 //
 // Statically Initialize Java References
 //
-jclass transactionClass;
-jmethodID transactionConstructor;
+jclass transactionClassPaymentProtocol;
+jmethodID transactionConstructorPaymentProtocol;
 
-jclass transactionInputClass;
-jmethodID transactionInputConstructor;
+jclass transactionInputClassPaymentProtocol;
+jmethodID transactionInputConstructorPaymentProtocol;
 
-jclass transactionOutputClass;
-jmethodID transactionOutputConstructor;
+jclass transactionOutputClassPaymentProtocol;
+jmethodID transactionOutputConstructorPaymentProtocol;
 
 static void commonStaticInitialize(JNIEnv *env) {
     //
-    transactionClass = (*env)->FindClass(env, "co/hodlwallet/core/BRCoreTransaction");
-    assert (NULL != transactionClass);
-    transactionClass = (*env)->NewGlobalRef(env, transactionClass);
+    transactionClassPaymentProtocol = (*env)->FindClass(env, "co/hodlwallet/core/BRCoreTransaction");
+    assert (NULL != transactionClassPaymentProtocol);
+    transactionClassPaymentProtocol = (*env)->NewGlobalRef(env, transactionClassPaymentProtocol);
 
-    transactionConstructor = (*env)->GetMethodID(env, transactionClass, "<init>", "(J)V");
-    assert (NULL != transactionConstructor);
-
-    //
-    transactionInputClass = (*env)->FindClass(env, "co/hodlwallet/core/BRCoreTransactionInput");
-    assert (NULL != transactionInputClass);
-    transactionInputClass = (*env)->NewGlobalRef(env, transactionInputClass);
-
-    transactionInputConstructor = (*env)->GetMethodID(env, transactionInputClass, "<init>", "(J)V");
-    assert (NULL != transactionInputConstructor);
+    transactionConstructorPaymentProtocol = (*env)->GetMethodID(env, transactionClassPaymentProtocol, "<init>", "(J)V");
+    assert (NULL != transactionConstructorPaymentProtocol);
 
     //
-    transactionOutputClass = (*env)->FindClass(env, "co/hodlwallet/core/BRCoreTransactionOutput");
-    assert(NULL != transactionOutputClass);
-    transactionOutputClass = (*env)->NewGlobalRef(env, transactionOutputClass);
+    transactionInputClassPaymentProtocol = (*env)->FindClass(env, "co/hodlwallet/core/BRCoreTransactionInput");
+    assert (NULL != transactionInputClassPaymentProtocol);
+    transactionInputClassPaymentProtocol = (*env)->NewGlobalRef(env, transactionInputClassPaymentProtocol);
 
-    transactionOutputConstructor = (*env)->GetMethodID(env, transactionOutputClass, "<init>", "(J)V");
-    assert (NULL != transactionOutputConstructor);
+    transactionInputConstructorPaymentProtocol = (*env)->GetMethodID(env, transactionInputClassPaymentProtocol, "<init>", "(J)V");
+    assert (NULL != transactionInputConstructorPaymentProtocol);
+
+    //
+    transactionOutputClassPaymentProtocol = (*env)->FindClass(env, "co/hodlwallet/core/BRCoreTransactionOutput");
+    assert(NULL != transactionOutputClassPaymentProtocol);
+    transactionOutputClassPaymentProtocol = (*env)->NewGlobalRef(env, transactionOutputClassPaymentProtocol);
+
+    transactionOutputConstructorPaymentProtocol = (*env)->GetMethodID(env, transactionOutputClassPaymentProtocol, "<init>", "(J)V");
+    assert (NULL != transactionOutputConstructorPaymentProtocol);
 }
 
 // ======================
@@ -96,13 +96,13 @@ Java_co_hodlwallet_core_BRCorePaymentProtocolRequest_getOutputs
 
     size_t outputCount = request->details->outCount;
 
-    jobjectArray outputs = (*env)->NewObjectArray (env, outputCount, transactionOutputClass, 0);
+    jobjectArray outputs = (*env)->NewObjectArray (env, outputCount, transactionOutputClassPaymentProtocol, 0);
 
     for (int i = 0; i < outputCount; i++) {
         BRTxOutput *output = (BRTxOutput *) calloc (1, sizeof (BRTxOutput));
         transactionOutputCopy (output, &request->details->outputs[i]);
 
-        jobject outputObject = (*env)->NewObject (env, transactionOutputClass, transactionOutputConstructor, (jlong) output);
+        jobject outputObject = (*env)->NewObject (env, transactionOutputClassPaymentProtocol, transactionOutputConstructorPaymentProtocol, (jlong) output);
         (*env)->SetObjectArrayElement (env, outputs, i, outputObject);
 
         (*env)->DeleteLocalRef (env, outputObject);
@@ -393,12 +393,12 @@ Java_co_hodlwallet_core_BRCorePaymentProtocolPayment_getTransactions
 
     size_t objectCount = payment->txCount;
 
-    jobjectArray objects = (*env)->NewObjectArray (env, objectCount, transactionClass, 0);
+    jobjectArray objects = (*env)->NewObjectArray (env, objectCount, transactionClassPaymentProtocol, 0);
 
     for (int i = 0; i < objectCount; i++) {
         BRTransaction *transaction = BRTransactionCopy (payment->transactions[i]);
 
-        jobject object = (*env)->NewObject (env, transactionClass, transactionConstructor, (jlong) transaction);
+        jobject object = (*env)->NewObject (env, transactionClassPaymentProtocol, transactionConstructorPaymentProtocol, (jlong) transaction);
         (*env)->SetObjectArrayElement (env, objects, i, object);
 
         (*env)->DeleteLocalRef (env, object);
@@ -420,13 +420,13 @@ Java_co_hodlwallet_core_BRCorePaymentProtocolPayment_getRefundTo
 
     size_t objectCount = payment->refundToCount;
 
-    jobjectArray objects = (*env)->NewObjectArray (env, objectCount, transactionOutputClass, 0);
+    jobjectArray objects = (*env)->NewObjectArray (env, objectCount, transactionOutputClassPaymentProtocol, 0);
 
     for (int i = 0; i < objectCount; i++) {
         BRTxOutput *target = (BRTxOutput *) calloc (1, sizeof (BRTxOutput));
         transactionOutputCopy (target, &payment->refundTo[i]);
 
-        jobject object = (*env)->NewObject (env, transactionOutputClass, transactionOutputConstructor, (jlong) target);
+        jobject object = (*env)->NewObject (env, transactionOutputClassPaymentProtocol, transactionOutputConstructorPaymentProtocol, (jlong) target);
         (*env)->SetObjectArrayElement (env, objects, i, object);
 
         (*env)->DeleteLocalRef (env, object);
@@ -550,12 +550,12 @@ Java_co_hodlwallet_core_BRCorePaymentProtocolACK_getTransactions
 
     size_t objectCount = payment->txCount;
 
-    jobjectArray objects = (*env)->NewObjectArray (env, objectCount, transactionClass, 0);
+    jobjectArray objects = (*env)->NewObjectArray (env, objectCount, transactionClassPaymentProtocol, 0);
 
     for (int i = 0; i < objectCount; i++) {
         BRTransaction *transaction = BRTransactionCopy (payment->transactions[i]);
 
-        jobject object = (*env)->NewObject (env, transactionClass, transactionConstructor, (jlong) transaction);
+        jobject object = (*env)->NewObject (env, transactionClassPaymentProtocol, transactionConstructorPaymentProtocol, (jlong) transaction);
         (*env)->SetObjectArrayElement (env, objects, i, object);
 
         (*env)->DeleteLocalRef (env, object);
@@ -577,13 +577,13 @@ Java_co_hodlwallet_core_BRCorePaymentProtocolACK_getRefundTo
 
     size_t objectCount = payment->refundToCount;
 
-    jobjectArray objects = (*env)->NewObjectArray (env, objectCount, transactionOutputClass, 0);
+    jobjectArray objects = (*env)->NewObjectArray (env, objectCount, transactionOutputClassPaymentProtocol, 0);
 
     for (int i = 0; i < objectCount; i++) {
         BRTxOutput *target = (BRTxOutput *) calloc (1, sizeof (BRTxOutput));
         transactionOutputCopy (target, &payment->refundTo[i]);
 
-        jobject object = (*env)->NewObject (env, transactionOutputClass, transactionOutputConstructor, (jlong) target);
+        jobject object = (*env)->NewObject (env, transactionOutputClassPaymentProtocol, transactionOutputConstructorPaymentProtocol, (jlong) target);
         (*env)->SetObjectArrayElement (env, objects, i, object);
 
         (*env)->DeleteLocalRef (env, object);
